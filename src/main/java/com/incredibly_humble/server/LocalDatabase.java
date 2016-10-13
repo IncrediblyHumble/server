@@ -1,10 +1,13 @@
 package com.incredibly_humble.server;
 
 import com.incredibly_humble.models.User;
+import com.incredibly_humble.models.WaterReport;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class LocalDatabase {
     //User Columns
@@ -12,11 +15,14 @@ public class LocalDatabase {
     private static String EMAIL = "email";
     private static String PASS = "password";
     private static String ADDR = "address";
-    private static String TYPE = "accountType";
+    private static String TYPE = "objType";
     private static String SUBD = "subscribed";
     private static String PHONE = "phone";
     private static String LOG_FAILED = "numFailedLogin";
-
+    private static String DATE = "date";
+    private static String LOC = "location";
+    private static String COND = "condition";
+    private static String ID = "ID";
     private static String DEFAULT_ERROR_MSG = "Error Occured";
     private static final String DRIVER = "org.h2.Driver";
     private Connection conn = null;
@@ -43,6 +49,7 @@ public class LocalDatabase {
         System.out.println("closed");
     }
 
+
     private void createTables() throws Exception {
         String executeString = "CREATE TABLE Users("
                 + NAME + " Text,"
@@ -55,12 +62,11 @@ public class LocalDatabase {
                 + LOG_FAILED + " INT NOT NULL);";
         conn.createStatement().execute(executeString);
         executeString = "CREATE TABLE WaterReports("
-                + "name Text,"
-                + "email Text,"
-                + "password Text,"
-                + "address Text,"
-                + "type Text,"
-                + "subscribed BIT);";
+                + DATE + " BIGINT,"
+                + LOC + " TEXT,"
+                + TYPE + " TEXT,"
+                + COND + " ,"
+                + ID + " int NOT NULL AUTO_INCREMENT);";
         conn.createStatement().execute(executeString);
     }
 
@@ -171,6 +177,7 @@ public class LocalDatabase {
 
     /**
      * takes a result set and parses the columns to return a User object with defined fields, without the password.
+     *
      * @param set
      * @return
      * @throws Exception
@@ -184,5 +191,43 @@ public class LocalDatabase {
                 Boolean.valueOf(set.getNString(SUBD)),
                 set.getNString(ADDR),
                 set.getNString(PHONE));
+    }
+
+
+    public String addWaterReoprt(WaterReport report) {
+        try {
+            String executeString = String.format("INSERT INTO WaterReports VALUES(%s, %s, %s, %s)",
+                    report.getDateReported().getTime(), report.getLocation(),
+                    report.getType().toString(), report.getCondition().toString());
+            conn.createStatement().execute(executeString);
+            return "1";
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return DEFAULT_ERROR_MSG;
+    }
+
+    public ArrayList<WaterReport> getWaterReports(){
+        ArrayList<WaterReport> reports = new ArrayList<>();
+        try{
+            String executeString = "SELECT * FROM  WaterReports";
+            ResultSet set = conn.createStatement().executeQuery(executeString);
+            while(set.next()){
+                reports.add(getWaterReport(set));
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return reports;
+    }
+    private WaterReport getWaterReport(ResultSet set) throws Exception{
+        return new WaterReport(
+                Integer.valueOf(set.getNString(ID)),
+                new Date(Long.valueOf(set.getNString(DATE))),
+                set.getNString(LOC),
+                set.getNString(NAME),
+                WaterReport.WaterType.valueOf(set.getNString(TYPE)),
+                WaterReport.WaterCondition.valueOf(set.getNString(COND))
+        );
     }
 }

@@ -26,7 +26,7 @@ public class WaterReport {
     private WaterType type;
     private WaterCondition condition;
 
-    public WaterReport(Date dateReported, String location, WaterType type, WaterCondition condition) {
+    public WaterReport(int id, Date dateReported, String location, String workerName, WaterType type, WaterCondition condition) {
         this.dateReported = dateReported;
         this.id = id;
         this.workerName = workerName;

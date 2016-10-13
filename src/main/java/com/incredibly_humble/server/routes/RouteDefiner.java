@@ -7,10 +7,16 @@ public class RouteDefiner {
     @Inject AddUser addUser;
     @Inject Login login;
     @Inject UpdateUser updateUser;
+    @Inject AddWaterReport addWaterReport;
+    @Inject GetWaterReports getWaterReports;
+
     public void defineRoutes(){
         //post
         post("/addUser",addUser);
         post("/login", login);
         post("/updateUser",updateUser);
+        post("/addWaterReport",addWaterReport);
+        //get
+        get("/getWaterReports",getWaterReports);
     }
 }
