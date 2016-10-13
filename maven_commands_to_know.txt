@@ -3,4 +3,4 @@ $mvn clean install
 
 run:
 mvn package
-mvn exec:java -D exec.mainClass=com.incredibly_humble.server.Server
+mvn exec:java -D exec.mainClass=com.incredibly_humble.server.Main  -Dexec.args="/home/noam/Desktop/incredibly_humble/server/db/"

@@ -2,6 +2,7 @@ package com.incredibly_humble.server;
 
 import com.incredibly_humble.models.User;
 import com.incredibly_humble.models.WaterReport;
+import com.incredibly_humble.models.WaterReports;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -56,7 +57,7 @@ public class LocalDatabase {
                 + EMAIL + " Text,"
                 + PASS + " Text,"
                 + TYPE + " Text,"
-                + SUBD + " BIT"
+                + SUBD + " BIT,"
                 + ADDR + " Text,"
                 + PHONE + " Text,"
                 + LOG_FAILED + " INT NOT NULL);";
@@ -64,8 +65,9 @@ public class LocalDatabase {
         executeString = "CREATE TABLE WaterReports("
                 + DATE + " BIGINT,"
                 + LOC + " TEXT,"
+                + NAME + " TEXT,"
                 + TYPE + " TEXT,"
-                + COND + " ,"
+                + COND + " TEXT,"
                 + ID + " int NOT NULL AUTO_INCREMENT);";
         conn.createStatement().execute(executeString);
     }
@@ -81,7 +83,7 @@ public class LocalDatabase {
      */
     public User login(String email, String pass) {
         try {
-            String executeString = "SELECT * FROM  Users WHERE email = " + email;
+            String executeString = String.format("SELECT * FROM  Users WHERE %s='%s'",EMAIL, email);
             ResultSet set = conn.createStatement().executeQuery(executeString);
             if (set.next()) {
                 int logFailed = Integer.valueOf(set.getNString(LOG_FAILED));
@@ -95,7 +97,7 @@ public class LocalDatabase {
                 }
 
             } else {
-                new User("User does not exist", null, null, null);
+                return new User("User does not exist", null, null, null);
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -109,40 +111,40 @@ public class LocalDatabase {
      * @param u
      * @return
      */
-    public String addUser(User u) {
+    public User addUser(User u) {
         try {
             if (exists(u)) {
-                return "User Already Exists";
+                return new User("User Already Exists", null, null, null);
             }
-            String executeString = "INSERT INTO Users VALUES(" +
-                    u.getName() + ", " + u.getEmail() + ", " + u.getPassword()
-                    + u.getType().toString() + ", " + u.getSubscribed() + ", "
-                    + u.getAddress() + ", " + u.getPhone() + ");";
+            String executeString = "INSERT INTO Users VALUES('" +
+                    u.getName() + "', '" + u.getEmail() + "', '" + u.getPassword() + "', '"
+                    + u.getType().toString() + "', " + u.getSubscribed() + ", '"
+                    + u.getAddress() + "', '" + u.getPhone() + "', 0);";
             conn.createStatement().execute(executeString);
-            return "1";
+            return u;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return DEFAULT_ERROR_MSG;
+        return new User(DEFAULT_ERROR_MSG, null, null, null);
     }
 
-    public String updateUser(User u) {
+    public User updateUser(User u) {
         try {
-            String executeString = "SELECT * FROM  Users WHERE email = " + u.getEmail();
+            String executeString = "SELECT * FROM  Users WHERE email = '" + u.getEmail()+"'";
             ResultSet set = conn.createStatement().executeQuery(executeString);
             if (!set.next()) {
-                return "User Does Not Exist";
+                return new User("User Does Not Exist", null, null, null);
             }
             String password = u.getPassword() == null ? set.getNString(PASS) : u.getPassword();
-            executeString = String.format("UPDATE Users SET %s=%s, %s=%s, %s=%s, %s=%s, %s=%s, %s=%s WHERE %s=%s",
+            executeString = String.format("UPDATE Users SET %s='%s', %s='%s', %s='%s', %s='%s', %s='%s', %s='%s' WHERE %s='%s'",
                     NAME, u.getName(), PASS, password, TYPE, u.getType().toString(),
                     SUBD, u.getSubscribed(), ADDR, u.getAddress(), PHONE, u.getPhone(), EMAIL, u.getEmail());
-            conn.createStatement().execute(executeString);
-            return "Update Succesful";
+            conn.createStatement().executeUpdate(executeString);
+            return u;
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return DEFAULT_ERROR_MSG;
+        return new User(DEFAULT_ERROR_MSG, null, null, null);
     }
 
     /**
@@ -153,11 +155,10 @@ public class LocalDatabase {
      */
     private boolean exists(User u) {
         try {
-            String executeString = "SELECT * FROM  Users WHERE email = " + u.getEmail();
+            String executeString = "SELECT * FROM  Users WHERE email = '" + u.getEmail() + "'";
             ResultSet set = conn.createStatement().executeQuery(executeString);
             return set.next();
         } catch (Exception e) {
-            e.printStackTrace();
         }
         return false;
     }
@@ -171,8 +172,8 @@ public class LocalDatabase {
      */
     private void incrementLogFailed(String email, int logFailed) throws Exception {
         String executeString = "UPDATE USERS SET " + LOG_FAILED + " = '" + (logFailed + 1) +
-                "' WHERE " + email + " = " + email;
-        conn.createStatement().executeQuery(executeString);
+                "' WHERE " + EMAIL + "='" + email+"'";
+        conn.createStatement().executeUpdate(executeString);
     }
 
     /**
@@ -194,33 +195,39 @@ public class LocalDatabase {
     }
 
 
-    public String addWaterReoprt(WaterReport report) {
+    public WaterReport addWaterReoprt(WaterReport report) {
         try {
-            String executeString = String.format("INSERT INTO WaterReports VALUES(%s, %s, %s, %s)",
+            String executeString = String.format("INSERT INTO WaterReports (%s, %s, %s, %s, %s) " +
+                            "VALUES('%s', '%s', '%s', '%s', '%s')",
+                    DATE, LOC, TYPE, COND, NAME,
                     report.getDateReported().getTime(), report.getLocation(),
-                    report.getType().toString(), report.getCondition().toString());
+                    report.getType().toString(), report.getCondition().toString(), report.getWorkerName());
             conn.createStatement().execute(executeString);
-            return "1";
+            executeString = String.format("SELECT * FROM  WaterReports WHERE %s='%d'",DATE, report.getDateReported().getTime());
+            ResultSet set = conn.createStatement().executeQuery(executeString);
+            set.next();
+            return getWaterReport(set);
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return DEFAULT_ERROR_MSG;
+        return null;
     }
 
-    public ArrayList<WaterReport> getWaterReports(){
+    public WaterReports getWaterReports() {
         ArrayList<WaterReport> reports = new ArrayList<>();
-        try{
+        try {
             String executeString = "SELECT * FROM  WaterReports";
             ResultSet set = conn.createStatement().executeQuery(executeString);
-            while(set.next()){
+            while (set.next()) {
                 reports.add(getWaterReport(set));
             }
-        }catch (Exception e){
+        } catch (Exception e) {
             e.printStackTrace();
         }
-        return reports;
+        return new WaterReports(reports);
     }
-    private WaterReport getWaterReport(ResultSet set) throws Exception{
+
+    private WaterReport getWaterReport(ResultSet set) throws Exception {
         return new WaterReport(
                 Integer.valueOf(set.getNString(ID)),
                 new Date(Long.valueOf(set.getNString(DATE))),

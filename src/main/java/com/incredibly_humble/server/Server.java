@@ -15,7 +15,7 @@ public class Server {
 
     //runs at http://localhost:4567/
     public void run() {
-        db.establishConnection(path + "/db");
+        db.establishConnection(Main.path + "/db");
         routeDefiner.defineRoutes();
     }
 
