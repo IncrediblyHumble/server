@@ -22,11 +22,11 @@ public class WaterReport {
     private Date dateReported;
     private int id;
     private String workerName;
-    private String location;
     private WaterType type;
     private WaterCondition condition;
+    private Location location;
 
-    public WaterReport(int id, Date dateReported, String location, String workerName, WaterType type, WaterCondition condition) {
+    public WaterReport(int id, Date dateReported, Location location, String workerName, WaterType type, WaterCondition condition) {
         this.dateReported = dateReported;
         this.id = id;
         this.workerName = workerName;
@@ -53,9 +53,6 @@ public class WaterReport {
     public void setWorkerName(String name){
         this.workerName = name;
     }
-    public String getLocation() {
-        return location;
-    }
 
     public WaterType getType() {
         return type;
@@ -64,5 +61,5 @@ public class WaterReport {
     public WaterCondition getCondition() {
         return condition;
     }
-
+    public Location getLocation(){return this.location;}
 }

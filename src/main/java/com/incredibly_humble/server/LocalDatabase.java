@@ -1,5 +1,6 @@
 package com.incredibly_humble.server;
 
+import com.incredibly_humble.models.Location;
 import com.incredibly_humble.models.User;
 import com.incredibly_humble.models.WaterReport;
 import com.incredibly_humble.models.WaterReports;
@@ -23,6 +24,8 @@ public class LocalDatabase {
     private static String DATE = "date";
     private static String LOC = "location";
     private static String COND = "condition";
+    private static String LAT = "lattitude";
+    private static String LON = "longitude";
     private static String ID = "ID";
     private static String DEFAULT_ERROR_MSG = "Error Occured";
     private static final String DRIVER = "org.h2.Driver";
@@ -68,6 +71,8 @@ public class LocalDatabase {
                 + NAME + " TEXT,"
                 + TYPE + " TEXT,"
                 + COND + " TEXT,"
+                + LAT + " TEXT,"
+                + LON + " TEXT,"
                 + ID + " int NOT NULL AUTO_INCREMENT);";
         conn.createStatement().execute(executeString);
     }
@@ -197,11 +202,12 @@ public class LocalDatabase {
 
     public WaterReport addWaterReoprt(WaterReport report) {
         try {
-            String executeString = String.format("INSERT INTO WaterReports (%s, %s, %s, %s, %s) " +
-                            "VALUES('%s', '%s', '%s', '%s', '%s')",
-                    DATE, LOC, TYPE, COND, NAME,
-                    report.getDateReported().getTime(), report.getLocation(),
-                    report.getType().toString(), report.getCondition().toString(), report.getWorkerName());
+            String executeString = String.format("INSERT INTO WaterReports (%s, %s, %s, %s, %s, %s) " +
+                            "VALUES('%s', '%s', '%s', '%s', '%f', '%f')",
+                    DATE, TYPE, COND, NAME, LAT, LON,
+                    report.getDateReported().getTime(),
+                    report.getType().toString(), report.getCondition().toString(), report.getWorkerName(),
+                    report.getLocation().getLatitude(), report.getLocation().getLongitude());
             conn.createStatement().execute(executeString);
             executeString = String.format("SELECT * FROM  WaterReports WHERE %s='%d'",DATE, report.getDateReported().getTime());
             ResultSet set = conn.createStatement().executeQuery(executeString);
@@ -231,10 +237,15 @@ public class LocalDatabase {
         return new WaterReport(
                 Integer.valueOf(set.getNString(ID)),
                 new Date(Long.valueOf(set.getNString(DATE))),
-                set.getNString(LOC),
+                new Location(Double.valueOf(set.getNString(LAT)), Double.valueOf(set.getNString(LON))),
                 set.getNString(NAME),
                 WaterReport.WaterType.valueOf(set.getNString(TYPE)),
                 WaterReport.WaterCondition.valueOf(set.getNString(COND))
         );
+    }
+
+    public void deleteWaterReport(WaterReport r) throws Exception{
+        String executeString = String.format("DELETE FROM WaterReports WHERE %s='%d'",ID,r.getId());
+        conn.createStatement().execute(executeString);
     }
 }
