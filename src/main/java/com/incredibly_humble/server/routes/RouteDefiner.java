@@ -17,15 +17,25 @@ public class RouteDefiner {
     GetWaterReports getWaterReports;
     @Inject
     DeleteWaterReport deleteWaterReport;
-
+    @Inject
+    AddWaterQualityReport addWaterQualityReport;
     public void defineRoutes() {
+        //USER
         //post
-        post("/addUser", addUser);
+        post("/add", addUser);
         post("/login", login);
-        post("/updateUser", updateUser);
-        post("/addWaterReport", addWaterReport);
-        post("/deleteWaterReport", deleteWaterReport);
+        post("/update", updateUser);
+
+        //Water Source Reports
+        //post
+        post("/addWaterSourceReport", addWaterReport);
+        post("/deleteWaterSourceReport", deleteWaterReport);
         //get
-        get("/getWaterReports", getWaterReports);
+        get("/getWaterSourceReports", getWaterReports);
+
+        //Water Quality Reports
+        //post
+        post("/addWaterQualityReport", addWaterQualityReport);
+
     }
 }

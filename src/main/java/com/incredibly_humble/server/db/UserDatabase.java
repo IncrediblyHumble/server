@@ -1,17 +1,13 @@
-package com.incredibly_humble.server;
+package com.incredibly_humble.server.db;
 
-import com.incredibly_humble.models.Location;
+
 import com.incredibly_humble.models.User;
-import com.incredibly_humble.models.WaterReport;
-import com.incredibly_humble.models.WaterReports;
 
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.ResultSet;
-import java.util.ArrayList;
-import java.util.Date;
+import java.sql.SQLException;
 
-public class LocalDatabase {
+public class UserDatabase {
     //User Columns
     private static String NAME = "name";
     private static String EMAIL = "email";
@@ -21,40 +17,14 @@ public class LocalDatabase {
     private static String SUBD = "subscribed";
     private static String PHONE = "phone";
     private static String LOG_FAILED = "numFailedLogin";
-    private static String DATE = "date";
-    private static String LOC = "location";
-    private static String COND = "condition";
-    private static String LAT = "lattitude";
-    private static String LON = "longitude";
-    private static String ID = "ID";
     private static String DEFAULT_ERROR_MSG = "Error Occured";
-    private static final String DRIVER = "org.h2.Driver";
-    private Connection conn = null;
 
-    //keep in order of database rows
-    public void establishConnection(String filePath) {
-        try {
-            Class.forName(DRIVER);
-            conn = DriverManager.getConnection("jdbc:h2:/" + filePath + ";IFEXISTS=TRUE");
-        } catch (Exception e) {
-            try {
-                Class.forName(DRIVER);
-                conn = DriverManager.getConnection("jdbc:h2:/" + filePath + ";");
-                createTables();
-            } catch (Exception e1) {
-                e1.printStackTrace();
-            }
-
-        }
+    private Connection conn;
+    public UserDatabase(Connection conn){
+        this.conn = conn;
     }
 
-    public void closeConnectoin() throws Exception {
-        conn.close();
-        System.out.println("closed");
-    }
-
-
-    private void createTables() throws Exception {
+    public void createTable() throws SQLException {
         String executeString = "CREATE TABLE Users("
                 + NAME + " Text,"
                 + EMAIL + " Text,"
@@ -64,16 +34,6 @@ public class LocalDatabase {
                 + ADDR + " Text,"
                 + PHONE + " Text,"
                 + LOG_FAILED + " INT NOT NULL);";
-        conn.createStatement().execute(executeString);
-        executeString = "CREATE TABLE WaterReports("
-                + DATE + " BIGINT,"
-                + LOC + " TEXT,"
-                + NAME + " TEXT,"
-                + TYPE + " TEXT,"
-                + COND + " TEXT,"
-                + LAT + " TEXT,"
-                + LON + " TEXT,"
-                + ID + " int NOT NULL AUTO_INCREMENT);";
         conn.createStatement().execute(executeString);
     }
 
@@ -95,7 +55,7 @@ public class LocalDatabase {
                 if (logFailed >= 3) {
                     return new User("Too many incorrect login attempts. Please reset password", null, null, null);
                 } else if (set.getNString(PASS).equals(pass)) {
-                    return getUser(set);
+                    return get(set);
                 } else {
                     incrementLogFailed(email, logFailed);
                     return new User("Password incorrect", null, null, null);
@@ -116,7 +76,7 @@ public class LocalDatabase {
      * @param u
      * @return
      */
-    public User addUser(User u) {
+    public User add(User u) {
         try {
             if (exists(u)) {
                 return new User("User Already Exists", null, null, null);
@@ -133,7 +93,7 @@ public class LocalDatabase {
         return new User(DEFAULT_ERROR_MSG, null, null, null);
     }
 
-    public User updateUser(User u) {
+    public User update(User u) {
         try {
             String executeString = "SELECT * FROM  Users WHERE email = '" + u.getEmail()+"'";
             ResultSet set = conn.createStatement().executeQuery(executeString);
@@ -188,7 +148,7 @@ public class LocalDatabase {
      * @return
      * @throws Exception
      */
-    public User getUser(ResultSet set) throws Exception {
+    public User get(ResultSet set) throws Exception {
         return new User(
                 set.getNString(NAME),
                 set.getNString(EMAIL),
@@ -199,53 +159,4 @@ public class LocalDatabase {
                 set.getNString(PHONE));
     }
 
-
-    public WaterReport addWaterReoprt(WaterReport report) {
-        try {
-            String executeString = String.format("INSERT INTO WaterReports (%s, %s, %s, %s, %s, %s) " +
-                            "VALUES('%s', '%s', '%s', '%s', '%f', '%f')",
-                    DATE, TYPE, COND, NAME, LAT, LON,
-                    report.getDateReported().getTime(),
-                    report.getType().toString(), report.getCondition().toString(), report.getWorkerName(),
-                    report.getLocation().getLatitude(), report.getLocation().getLongitude());
-            conn.createStatement().execute(executeString);
-            executeString = String.format("SELECT * FROM  WaterReports WHERE %s='%d'",DATE, report.getDateReported().getTime());
-            ResultSet set = conn.createStatement().executeQuery(executeString);
-            set.next();
-            return getWaterReport(set);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    public WaterReports getWaterReports() {
-        ArrayList<WaterReport> reports = new ArrayList<>();
-        try {
-            String executeString = "SELECT * FROM  WaterReports";
-            ResultSet set = conn.createStatement().executeQuery(executeString);
-            while (set.next()) {
-                reports.add(getWaterReport(set));
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return new WaterReports(reports);
-    }
-
-    private WaterReport getWaterReport(ResultSet set) throws Exception {
-        return new WaterReport(
-                Integer.valueOf(set.getNString(ID)),
-                new Date(Long.valueOf(set.getNString(DATE))),
-                new Location(Double.valueOf(set.getNString(LAT)), Double.valueOf(set.getNString(LON))),
-                set.getNString(NAME),
-                WaterReport.WaterType.valueOf(set.getNString(TYPE)),
-                WaterReport.WaterCondition.valueOf(set.getNString(COND))
-        );
-    }
-
-    public void deleteWaterReport(WaterReport r) throws Exception{
-        String executeString = String.format("DELETE FROM WaterReports WHERE %s='%d'",ID,r.getId());
-        conn.createStatement().execute(executeString);
-    }
 }

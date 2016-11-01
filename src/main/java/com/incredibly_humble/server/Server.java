@@ -2,14 +2,14 @@ package com.incredibly_humble.server;
 
 
 import com.google.inject.Inject;
+import com.incredibly_humble.server.db.LocalDatabase;
 import com.incredibly_humble.server.routes.RouteDefiner;
 
 import java.io.File;
 
-import static spark.Spark.*;
-
 public class Server {
-    @Inject LocalDatabase db;
+    @Inject
+    LocalDatabase db;
     @Inject RouteDefiner routeDefiner;
 
     //runs at http://localhost:4567/
