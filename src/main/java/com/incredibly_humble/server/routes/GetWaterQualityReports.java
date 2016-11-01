@@ -7,7 +7,7 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
-public class GetWaterReports implements Route {
+public class GetWaterQualityReports implements Route {
     @Inject
     LocalDatabase db;
     @Inject
@@ -15,7 +15,7 @@ public class GetWaterReports implements Route {
     @Override
     public Object handle(Request request, Response response) throws Exception {
         try {
-            return gson.toJson(db.waterReportDb.getAll());
+            return gson.toJson(db.waterQualityReportDb.getAll());
         } catch (Exception e) {
             e.printStackTrace();
             return 0;

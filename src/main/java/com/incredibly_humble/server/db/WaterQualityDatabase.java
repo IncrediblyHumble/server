@@ -1,12 +1,11 @@
 package com.incredibly_humble.server.db;
 
-import com.incredibly_humble.models.Location;
-import com.incredibly_humble.models.WaterQualityReport;
-import com.incredibly_humble.models.WaterSourceReport;
+import com.incredibly_humble.models.*;
 
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Date;
 
 public class WaterQualityDatabase {
@@ -46,10 +45,10 @@ public class WaterQualityDatabase {
                     DATE, COND, NAME, VIRUS, CONTAMINANT, LAT, LON,
                     report.getDateReported().getTime(),
                     report.getCondition().toString(), report.getWorkerName(),
-                    report.getVirus(), report.getCondition(),
+                    report.getVirus(), report.getContaminant(),
                     report.getLocation().getLatitude(), report.getLocation().getLongitude());
             conn.createStatement().execute(executeString);
-            executeString = String.format("SELECT * FROM  WaterSourceReports WHERE %s='%d'", DATE, report.getDateReported().getTime());
+            executeString = String.format("SELECT * FROM  WaterQualityReports WHERE %s='%d'", DATE, report.getDateReported().getTime());
             ResultSet set = conn.createStatement().executeQuery(executeString);
             set.next();
             return getWaterQualityReport(set);
@@ -57,6 +56,20 @@ public class WaterQualityDatabase {
             e.printStackTrace();
         }
         return null;
+    }
+
+    public WaterQualityReports getAll() {
+        ArrayList<WaterQualityReport> reports = new ArrayList<>();
+        try {
+            String executeString = "SELECT * FROM  WaterQualityReports";
+            ResultSet set = conn.createStatement().executeQuery(executeString);
+            while (set.next()) {
+                reports.add(getWaterQualityReport(set));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return new WaterQualityReports(reports);
     }
 
     private WaterQualityReport getWaterQualityReport(ResultSet set) throws Exception {
@@ -70,4 +83,5 @@ public class WaterQualityDatabase {
                 Integer.valueOf(set.getNString(CONTAMINANT))
         );
     }
+
 }

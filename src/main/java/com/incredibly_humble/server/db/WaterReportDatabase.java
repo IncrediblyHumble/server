@@ -56,10 +56,10 @@ public class WaterReportDatabase {
         return null;
     }
 
-    public WaterSourceReports get() {
+    public WaterSourceReports getAll() {
         ArrayList<WaterSourceReport> reports = new ArrayList<>();
         try {
-            String executeString = "SELECT * FROM  WaterReports";
+            String executeString = "SELECT * FROM  WaterSourceReports";
             ResultSet set = conn.createStatement().executeQuery(executeString);
             while (set.next()) {
                 reports.add(getWaterReport(set));
