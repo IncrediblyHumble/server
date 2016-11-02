@@ -27,7 +27,7 @@ public class WaterReportDatabase {
     }
 
     public void createTable() throws SQLException{
-        String executeString = "CREATE TABLE WaterReports("
+        String executeString = "CREATE TABLE WaterSourceReports("
                 + DATE + " BIGINT,"
                 + LOC + " TEXT,"
                 + NAME + " TEXT,"
