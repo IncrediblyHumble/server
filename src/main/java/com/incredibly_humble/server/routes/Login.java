@@ -13,12 +13,12 @@ public class Login implements Route {
     LocalDatabase db;
     @Inject
     Gson gson;
+
     @Override
     public Object handle(Request request, Response response) throws Exception {
         try {
             User u = gson.fromJson(request.body(), User.class);
-            return gson.toJson(db.userDb.login(u.getEmail(),u.getPassword()))
-                    ;
+            return gson.toJson(db.userDb.login(u.getEmail(), u.getPassword()));
         } catch (Exception e) {
             e.printStackTrace();
             return new User("UNKNOWN ERROR", null, null, null);

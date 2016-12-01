@@ -30,8 +30,10 @@ public class WaterQualityReport {
     }
 
     public Date getDateReported() {
-        return dateReported;
-    }
+        if(dateReported != null){
+            return dateReported;
+        }
+        return new Date();    }
 
     public int getId() {
         return id;
