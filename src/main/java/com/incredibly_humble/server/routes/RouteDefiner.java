@@ -1,6 +1,7 @@
 package com.incredibly_humble.server.routes;
 
 import com.google.inject.Inject;
+import com.incredibly_humble.server.Logger;
 
 import static spark.Spark.*;
 
@@ -21,9 +22,11 @@ public class RouteDefiner {
     AddWaterQualityReport addWaterQualityReport;
     @Inject
     GetWaterQualityReports getWaterQualityReports;
+    @Inject
+    GetLogs getLogs;
     public void defineRoutes() {
         enableCORS("*", "*", "*");
-
+        Logger.INIT();
         //USER
         //post
         post("/addUser", addUser);
@@ -42,6 +45,10 @@ public class RouteDefiner {
         post("/addWaterQualityReport", addWaterQualityReport);
         //getAll
         get("/getWaterQualityReports", getWaterQualityReports);
+        get("/logs",getLogs);
+        after((request, response) -> {
+            Logger.LOG(request.pathInfo(),request.body(),response.body());
+        });
 
     }
     // Enables CORS on requests. This method is an initialization method and should be called once.
